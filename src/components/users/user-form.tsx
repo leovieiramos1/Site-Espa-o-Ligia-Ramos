@@ -51,12 +51,10 @@ export function UserForm({
     const url = isEditing ? `/api/usuarios/${userId}` : "/api/usuarios";
     const method = isEditing ? "PATCH" : "POST";
 
-    const payload = isEditing && !data.password ? { ...data, password: undefined } : data;
-
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(data),
     });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
