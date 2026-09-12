@@ -5,6 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  // Necessário para rodar atrás do proxy da Railway/Render (TLS terminado
+  // antes da aplicação) — sem isso, o Auth.js rejeita o host com "UntrustedHost".
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
