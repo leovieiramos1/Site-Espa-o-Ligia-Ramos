@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { roleLabels, type Role } from "@/lib/permissions";
 import { passwordRules } from "@/lib/validation";
-import { ShieldCheck, UserPlus, Mail, Phone, Lock } from "lucide-react";
+import { ShieldCheck, UserPlus, Mail, Phone, Lock, Pencil } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -83,6 +83,12 @@ export default async function ConfiguracoesPage() {
                   <span className="text-xs text-muted">
                     {u.lastLoginAt ? `Último acesso: ${u.lastLoginAt.toLocaleDateString("pt-BR")}` : "Nunca acessou"}
                   </span>
+                  <Link
+                    href={`/configuracoes/usuarios/${u.id}/editar`}
+                    className="flex items-center gap-1.5 text-xs font-medium text-sage-darker hover:underline"
+                  >
+                    <Pencil size={13} /> Editar
+                  </Link>
                 </div>
               </div>
             ))}

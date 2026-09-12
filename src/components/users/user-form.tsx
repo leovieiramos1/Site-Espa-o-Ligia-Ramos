@@ -4,36 +4,59 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { userSchema, ROLES, type UserInput } from "@/lib/user-schema";
+import {
+  userSchema,
+  userEditSchema,
+  ROLES,
+  type UserInput,
+  type UserEditInput,
+} from "@/lib/user-schema";
 import { passwordRules } from "@/lib/validation";
 import { roleLabels } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Check } from "lucide-react";
 
-const inputClass =
-  "w-full rounded-xl border border-line bg-card px-3.5 py-2 text-sm text-ink placeholder:text-muted focus:border-sage focus:outline-none";
-const labelClass = "mb-1.5 block text-sm font-medium text-ink";
-const errorClass = "mt-1 text-xs text-status-alert";
+type FormValues = UserInput | UserEditInput;
 
-export function UserForm() {
+export function UserForm({
+  user,
+  userId,
+}: {
+  user?: { name: string; email: string; role: (typeof ROLES)[number] };
+  userId?: string;
+} = {}) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const isEditing = !!userId;
+
+  const inputClass =
+    "w-full rounded-xl border border-line bg-card px-3.5 py-2 text-sm text-ink placeholder:text-muted focus:border-sage focus:outline-none";
+  const labelClass = "mb-1.5 block text-sm font-medium text-ink";
+  const errorClass = "mt-1 text-xs text-status-alert";
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<UserInput>({
-    resolver: zodResolver(userSchema),
-    defaultValues: { role: "RECEPCAO" },
+  } = useForm<FormValues>({
+    resolver: zodResolver(isEditing ? userEditSchema : userSchema),
+    defaultValues: isEditing
+      ? { name: user?.name ?? "", email: user?.email ?? "", role: user?.role ?? "RECEPCAO", password: "" }
+      : { role: "RECEPCAO" },
   });
 
-  async function onSubmit(data: UserInput) {
+  async function onSubmit(data: FormValues) {
     setServerError(null);
-    const res = await fetch("/api/usuarios", {
-      method: "POST",
+    const url = isEditing ? `/api/usuarios/${userId}` : "/api/usuarios";
+    const method = isEditing ? "PATCH" : "POST";
+
+    const payload = isEditing && !data.password ? { ...data, password: undefined } : data;
+
+    const res = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
@@ -70,8 +93,13 @@ export function UserForm() {
             <p className="mt-1 text-xs text-muted">Apenas @gmail.com ou @hotmail.com</p>
           </div>
           <div>
-            <label className={labelClass}>Senha provisória</label>
-            <input type="password" className={inputClass} placeholder="••••••••" {...register("password")} />
+            <label className={labelClass}>{isEditing ? "Nova senha (opcional)" : "Senha provisória"}</label>
+            <input
+              type="password"
+              className={inputClass}
+              placeholder={isEditing ? "Deixe em branco para manter a atual" : "••••••••"}
+              {...register("password")}
+            />
             {errors.password && <p className={errorClass}>{errors.password.message}</p>}
           </div>
         </div>
@@ -99,7 +127,7 @@ export function UserForm() {
           Cancelar
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Salvando…" : "Criar usuário"}
+          {isSubmitting ? "Salvando…" : isEditing ? "Salvar alterações" : "Criar usuário"}
         </Button>
       </div>
     </form>
