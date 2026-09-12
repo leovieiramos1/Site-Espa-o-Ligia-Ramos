@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+:root {
+  --color-cream: #f7f3ec;
+  --color-cream-soft: #f1ece2;
+  --color-card: #fffdf9;
+  --color-sage: #7d8875;
+  --color-sage-light: #eef0e9;
+  --color-sage-dark: #4f5a4a;
+  --color-sage-darker: #3c453a;
+  --color-gold: #a38b67;
+  --color-gold-light: #f1e7d6;
+  --color-ink: #33362f;
+  --color-muted: #837c6d;
+  --color-line: #e7e0d2;
+
+  --color-status-done: #6b8f71;
+  --color-status-done-bg: #e7efe4;
+  --color-status-wait: #b48a4a;
+  --color-status-wait-bg: #f5ead3;
+  --color-status-alert: #b56a4a;
+  --color-status-alert-bg: #f6e4da;
+  --color-status-off: #8a8478;
+  --color-status-off-bg: #ece8e0;
+
+  --background: var(--color-cream);
+  --foreground: var(--color-ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-cream: var(--color-cream);
+  --color-cream-soft: var(--color-cream-soft);
+  --color-card: var(--color-card);
+  --color-sage: var(--color-sage);
+  --color-sage-light: var(--color-sage-light);
+  --color-sage-dark: var(--color-sage-dark);
+  --color-sage-darker: var(--color-sage-darker);
+  --color-gold: var(--color-gold);
+  --color-gold-light: var(--color-gold-light);
+  --color-ink: var(--color-ink);
+  --color-muted: var(--color-muted);
+  --color-line: var(--color-line);
+
+  --color-status-done: var(--color-status-done);
+  --color-status-done-bg: var(--color-status-done-bg);
+  --color-status-wait: var(--color-status-wait);
+  --color-status-wait-bg: var(--color-status-wait-bg);
+  --color-status-alert: var(--color-status-alert);
+  --color-status-alert-bg: var(--color-status-alert-bg);
+  --color-status-off: var(--color-status-off);
+  --color-status-off-bg: var(--color-status-off-bg);
+
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-fraunces);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: var(--color-sage-light);
+  color: var(--color-sage-darker);
+}
+
+* {
+  scrollbar-color: var(--color-sage) transparent;
+  scrollbar-width: thin;
+}

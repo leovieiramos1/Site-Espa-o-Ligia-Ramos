@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  PROFISSIONAL
+  RECEPCAO
+  FINANCEIRO
+}
+
+enum PatientStatus {
+  ATIVO
+  INATIVO
+  NOVO
+}
+
+enum PaymentStatus {
+  PAGO
+  PENDENTE
+  ATRASADO
+  PARCIAL
+}
+
+enum AppointmentStatus {
+  AGENDADA
+  CONFIRMADA
+  EM_ATENDIMENTO
+  CONCLUIDA
+  CANCELADA
+  FALTOU
+}
+
+enum EventRegistrationStatus {
+  INSCRITO
+  CONFIRMADO
+  COMPARECEU
+  CANCELOU
+}
+
+model User {
+  id             String        @id @default(cuid())
+  name           String
+  email          String        @unique
+  passwordHash   String
+  role           Role          @default(RECEPCAO)
+  professionalId String?       @unique
+  professional   Professional? @relation(fields: [professionalId], references: [id])
+  createdAt      DateTime      @default(now())
+  lastLoginAt    DateTime?
+
+  auditLogs AuditLog[]
+}
+
+model Professional {
+  id        String   @id @default(cuid())
+  name      String
+  specialty String
+  email     String
+  phone     String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user           User?
+  patients       Patient[]
+  appointments   Appointment[]
+  treatmentPlans TreatmentPlan[]
+  evolutions     Evolution[]
+}
+
+model Patient {
+  id                String        @id @default(cuid())
+  name              String
+  nickname          String?
+  photoPath         String?
+  birthDate         DateTime?
+  cpf               String        @unique
+  phone             String
+  email             String
+  address           String?
+  emergencyContact  String?
+  status            PatientStatus @default(NOVO)
+  treatment         String?
+  professionalId    String?
+  professional      Professional? @relation(fields: [professionalId], references: [id])
+  financialStatus   PaymentStatus @default(PENDENTE)
+  lastVisitAt       DateTime?
+  nextVisitAt       DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  appointments   Appointment[]
+  treatmentPlans TreatmentPlan[]
+  evolutions     Evolution[]
+  payments       Payment[]
+  documents      PatientDocument[]
+}
+
+model PatientDocument {
+  id         String   @id @default(cuid())
+  patientId  String
+  patient    Patient  @relation(fields: [patientId], references: [id])
+  fileName   String
+  filePath   String
+  mimeType   String
+  size       Int
+  uploadedAt DateTime @default(now())
+}
+
+model Appointment {
+  id             String            @id @default(cuid())
+  patientId      String
+  patient        Patient           @relation(fields: [patientId], references: [id])
+  professionalId String?
+  professional   Professional?     @relation(fields: [professionalId], references: [id])
+  specialty      String
+  room           String?
+  startsAt       DateTime
+  status         AppointmentStatus @default(AGENDADA)
+  notes          String?
+  createdAt      DateTime          @default(now())
+}
+
+model TreatmentPlan {
+  id             String        @id @default(cuid())
+  patientId      String
+  patient        Patient       @relation(fields: [patientId], references: [id])
+  professionalId String?
+  professional   Professional? @relation(fields: [professionalId], references: [id])
+  name           String
+  sessionsTotal  Int
+  sessionsDone   Int           @default(0)
+  startDate      DateTime
+  value          Float
+  createdAt      DateTime      @default(now())
+}
+
+model Evolution {
+  id             String       @id @default(cuid())
+  patientId      String
+  patient        Patient      @relation(fields: [patientId], references: [id])
+  professionalId String?
+  professional   Professional? @relation(fields: [professionalId], references: [id])
+  date           DateTime     @default(now())
+  note           String
+  pain           Int?
+  createdAt      DateTime     @default(now())
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  patientId   String
+  patient     Patient       @relation(fields: [patientId], references: [id])
+  amount      Float
+  method      String
+  status      PaymentStatus @default(PENDENTE)
+  dueDate     DateTime?
+  paidAt      DateTime?
+  description String?
+  createdAt   DateTime      @default(now())
+}
+
+model Event {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  date         DateTime
+  location     String?
+  capacity     Int
+  responsible  String?
+  createdAt    DateTime @default(now())
+
+  registrations EventRegistration[]
+}
+
+model EventRegistration {
+  id           String                  @id @default(cuid())
+  eventId      String
+  event        Event                   @relation(fields: [eventId], references: [id])
+  patientName  String
+  status       EventRegistrationStatus @default(INSCRITO)
+  createdAt    DateTime                @default(now())
+}
+
+model InventoryItem {
+  id          String   @id @default(cuid())
+  name        String
+  category    String
+  quantity    Int
+  minQuantity Int      @default(0)
+  supplier    String?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  details    String?
+  createdAt  DateTime @default(now())
+}
