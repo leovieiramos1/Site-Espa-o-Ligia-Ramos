@@ -82,3 +82,50 @@ export async function PATCH(
 
   return NextResponse.json({ id: user.id, name: user.name, email: user.email, role: user.role });
 }
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+  }
+
+  const { id } = await params;
+
+  if (id === session.user.id) {
+    return NextResponse.json(
+      { error: { formErrors: ["Você não pode remover sua própria conta enquanto está logado com ela"] } },
+      { status: 409 }
+    );
+  }
+
+  const existing = await prisma.user.findUnique({ where: { id } });
+  if (!existing) return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+
+  if (existing.role === "ADMIN") {
+    const adminCount = await prisma.user.count({ where: { role: "ADMIN" } });
+    if (adminCount <= 1) {
+      return NextResponse.json(
+        { error: { formErrors: ["Não é possível remover o último administrador do sistema"] } },
+        { status: 409 }
+      );
+    }
+  }
+
+  await prisma.$transaction([
+    prisma.auditLog.deleteMany({ where: { userId: id } }),
+    prisma.user.delete({ where: { id } }),
+  ]);
+
+  await logAudit({
+    userId: session.user.id,
+    action: "DELETE",
+    entityType: "User",
+    entityId: id,
+    details: `Usuário ${existing.email} removido`,
+  });
+
+  return NextResponse.json({ ok: true });
+}

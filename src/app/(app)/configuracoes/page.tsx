@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DeleteUserButton } from "@/components/users/delete-user-button";
 import { roleLabels, type Role } from "@/lib/permissions";
 import { passwordRules } from "@/lib/validation";
 import { ShieldCheck, UserPlus, Mail, Phone, Lock, Pencil } from "lucide-react";
@@ -9,10 +11,13 @@ import { ShieldCheck, UserPlus, Mail, Phone, Lock, Pencil } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function ConfiguracoesPage() {
-  const users = await prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-    select: { id: true, name: true, email: true, role: true, lastLoginAt: true },
-  });
+  const [users, session] = await Promise.all([
+    prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      select: { id: true, name: true, email: true, role: true, lastLoginAt: true },
+    }),
+    auth(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -89,6 +94,11 @@ export default async function ConfiguracoesPage() {
                   >
                     <Pencil size={13} /> Editar
                   </Link>
+                  <DeleteUserButton
+                    userId={u.id}
+                    userName={u.name}
+                    isSelf={u.id === session?.user?.id}
+                  />
                 </div>
               </div>
             ))}
